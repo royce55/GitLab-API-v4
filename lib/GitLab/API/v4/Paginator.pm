@@ -82,6 +82,12 @@ has params => (
     default => sub{ {} },
 );
 
+has _next_params => (
+    is      => 'rw',
+    isa     => HashRef,
+    default => sub{ {} },
+);
+
 =head1 METHODS
 
 =cut
@@ -110,6 +116,9 @@ has _last_page => (
 
 Returns an array ref of records for the next page.
 
+To use keyset pagination pagination=>'keyset' must be set
+in params hash
+
 =cut
 
 sub next_page {
@@ -117,18 +126,41 @@ sub next_page {
 
     return if $self->_last_page();
 
-    my $page     = $self->_page() + 1;
+    my $page;
     my $params   = $self->params();
-    my $per_page = $params->{per_page} || 20;
+    # Don't allow cursor to be directly passed in
+    delete $params->{'cursor'};
 
-    $params = {
-        %$params,
-        page     => $page,
-        per_page => $per_page,
-    };
+    # if keyset pagination
+    my $pagination = $params->{'pagination'};
+    my $keyset = (defined $pagination && $pagination eq 'keyset') ? 1 : 0;
 
     my $method = $self->method();
-    my $records = $self->api->$method(
+    # As of Gitlab v17.0 'users'endpoint only uses keyset pagination
+    $keyset = 1 if ($method eq 'users' && ! $keyset);
+
+    my $per_page = $params->{per_page} || 20;
+
+    if ($keyset) {
+        my $next_params = $self->_next_params();
+        $params = {
+            'order_by'   => 'id',
+            'sort'       => 'asc',
+            'per_page'   => $per_page,
+            %$params,
+            'pagination' => 'keyset',
+            %$next_params,
+        };
+    } else {
+        $page     = $self->_page() + 1;
+        $params = {
+            %$params,
+            page     => $page,
+            per_page => $per_page,
+        };
+    }
+
+    my ($headers,$records) = $self->api->$method(
         @{ $self->args() },
         $params,
     );
@@ -136,13 +168,42 @@ sub next_page {
     croak("The $method method returned a non array ref value")
         if ref($records) ne 'ARRAY';
 
-    $self->_page( $page );
+    if ($keyset) {
+        $self->_next_link_params($headers)
+    } else {
+        $self->_page( $page );
+    }
     $self->_last_page( 1 ) if @$records < $per_page;
     $self->_records( [ @$records ] );
 
     return if !@$records;
 
     return $records;
+}
+
+=head2 _next_link_params
+
+  Sets _next_params hash, from the params returned in the next link,
+  when using pagination='keyset'
+
+=cut
+
+sub _next_link_params {
+    my ($self,$headers) = @_;
+    my $links = $headers->{'link'};
+    return undef if ! $links;
+    return undef if ! ($links =~ m/([^<]*)>; rel="next"/);
+    my $nextLink = $1;
+    my $params = {};
+    my ($url,$paramStr) = split('\?',$nextLink);
+    return undef if (! $paramStr);
+    my @paramList = split("&",$paramStr);
+    foreach my $param (@paramList) {
+        my ($key,$val) = split("=",$param);
+        $params->{$key} = $val;
+    }
+    $self->_next_params($params);
+    return 1;
 }
 
 =head2 next
@@ -207,6 +268,7 @@ sub reset {
     my ($self) = @_;
     $self->_records( [] );
     $self->_page( 0 );
+    $self->_next_params( {} );
     $self->_last_page( 0 );
     return;
 }

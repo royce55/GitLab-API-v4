@@ -150,6 +150,9 @@ sub request {
     my $query = delete $options->{query};
     my $content = delete $options->{content};
     my $headers = $options->{headers} = { %{ $options->{headers} || {} } };
+    my $pagination = $query->{'pagination'};
+    # delete cursor and save it for later to avoid it being corrupted
+    my $cursor = delete $query->{'cursor'};
 
     # Convert foo/:bar/baz into foo/%s/baz.
     my $path = $raw_path;
@@ -163,9 +166,13 @@ sub request {
 
     my $url = $self->_clean_base_url->clone();
     $url->path( $url->path() . '/' . $path );
+    # query_form can corrupt the cursor so we add it on afterwards
     $url->query_form( $query ) if defined $query;
-    $url = "$url"; # No more changes to the url from this point forward.
-
+    $url = "$url";
+    if ($pagination && $cursor) {
+        $url = "$url&cursor=$cursor";
+    }
+    # No more changes to the url from this point forward.
     my $req_method = 'request';
     my $req = [ $verb, $url, $options ];
 
@@ -240,10 +247,15 @@ sub request {
 
         my $decode = $options->{decode};
         $decode = 1 if !defined $decode;
-        return $res->{content} if !$decode;
+
+        # returns headers,contents.
+        # When called in scalar mode, contents is returned and
+        # headers thrown away.
+        #
+        return $res->{'headers'},$res->{content} if !$decode;
 
         return try{
-            $self->json->decode( $res->{content} );
+            $res->{'headers'},$self->json->decode( $res->{content} );
         }
         catch {
             croakf(
