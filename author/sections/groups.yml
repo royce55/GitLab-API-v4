@@ -6,10 +6,11 @@
 - create_group: POST groups?
 - transfer_project_to_group: POST groups/:group_id/projects/:project_id
 - edit_group: group = PUT groups/:group_id?
-- delete_group: DELETE groups/:group_id
+- delete_group: DELETE groups/:group_id?
 - sync_group_with_ldap: POST groups/:group_id/ldap_sync
 - create_ldap_group_link: POST groups/:group_id/ldap_group_links?
 - delete_ldap_group_link: DELETE groups/:group_id/ldap_group_links/:cn
 - delete_ldap_provider_group_link: DELETE groups/:group_id/ldap_group_links/:provider/:cn
+- group_descendants: descendants = GET groups/:group_id/descendant_groups?
 - share_group_with_group: POST groups/:group_id/share?
 - unshare_group_with_group: DELETE groups/:group_id/share/:shared_with_group_id

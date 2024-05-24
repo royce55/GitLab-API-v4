@@ -1,6 +1,18 @@
 ---
 - wiki_pages: pages = GET projects/:project_id/wikis?
-- wiki_page: pages = GET projects/:project_id/wikis/:slug
+- wiki_page: pages = GET projects/:project_id/wikis/:slug?
 - create_wiki_page: page = POST projects/:project_id/wikis?
 - edit_wiki_page: page = PUT projects/:project_id/wikis/:slug?
 - delete_wiki_page: DELETE projects/:project_id/wikis/:slug
+- method: upload_wiki_attachments
+  spec: upload = POST projects/:project_id/wikis/attachments?
+  note: The C<file> parameter must point to a readable file on the local filesystem.
+- group_wiki_pages: pages = GET groups/:group_id/wikis?
+- group_wiki_page: page = GET groups/:group_id/wikis/:slug?
+- group_create_wiki_page: page = POST groups/:group_id/wikis?
+- group_edit_wiki_page: page = PUT groups/:group_id/wikis/:slug?
+- group_delete_wiki_page: DELETE groups/:group_id/wikis/:slug
+- group_upload_wiki_attachments: page = POST groups/:group_id/wikis/attachments
+- method: group_upload_wiki_attachments
+  spec: upload = POST groups/:group_id/wikis/attachments?
+  note: The C<file> parameter must point to a readable file on the local filesystem.

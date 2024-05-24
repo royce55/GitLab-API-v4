@@ -2,6 +2,17 @@ Revision history for Perl extension GitLab-API-v4.
 
 {{$NEXT}}
 
+ - Add keyset pagination to Paginator.pm
+ - Add group_descendants
+ - Add user_starred_projects
+ - Add upload_wiki_attachments
+ - Add group_wiki_pages
+ - Add group_wiki_page
+ - Add group_create_wiki_page
+ - Add group_edit_wiki_page
+ - Add group_delete_wiki_page
+ - Add group_upload_wiki_attachments
+ - Add group_upload_wiki_attachments
  - Retry on 429 (rate limited) responses.
  - Add a retry_wait with a default of 10 (seconds).
 

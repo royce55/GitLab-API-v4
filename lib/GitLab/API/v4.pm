@@ -1,5 +1,5 @@
 package GitLab::API::v4;
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 
 =encoding utf8
 
@@ -2792,6 +2792,7 @@ sub edit_group {
 
     $api->delete_group(
         $group_id,
+        \%params,
     );
 
 Sends a C<DELETE> request to C<groups/:group_id>.
@@ -2800,10 +2801,13 @@ Sends a C<DELETE> request to C<groups/:group_id>.
 
 sub delete_group {
     my $self = shift;
-    croak 'delete_group must be called with 1 arguments' if @_ != 1;
+    croak 'delete_group must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
     croak 'The #1 argument ($group_id) to delete_group must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to delete_group must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
     my $options = {};
     $options->{decode} = 0;
+    $options->{content} = $params if defined $params;
     $self->_call_rest_client( 'DELETE', 'groups/:group_id', [@_], $options );
     return;
 }
@@ -2896,6 +2900,28 @@ sub delete_ldap_provider_group_link {
     $options->{decode} = 0;
     $self->_call_rest_client( 'DELETE', 'groups/:group_id/ldap_group_links/:provider/:cn', [@_], $options );
     return;
+}
+
+=item group_descendants
+
+    my $descendants = $api->group_descendants(
+        $group_id,
+        \%params,
+    );
+
+Sends a C<GET> request to C<groups/:group_id/descendant_groups> and returns the decoded response content.
+
+=cut
+
+sub group_descendants {
+    my $self = shift;
+    croak 'group_descendants must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($group_id) to group_descendants must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to group_descendants must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{query} = $params if defined $params;
+    return $self->_call_rest_client( 'GET', 'groups/:group_id/descendant_groups', [@_], $options );
 }
 
 =item share_group_with_group
@@ -10879,6 +10905,28 @@ sub user_memberships {
     return $self->_call_rest_client( 'GET', 'users/:user_id/memberships', [@_], $options );
 }
 
+=item user_starred_projects
+
+    my $projects = $api->user_starred_projects(
+        $user_id,
+        \%params,
+    );
+
+Sends a C<GET> request to C<users/:user_id/starred_projects> and returns the decoded response content.
+
+=cut
+
+sub user_starred_projects {
+    my $self = shift;
+    croak 'user_starred_projects must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($user_id) to user_starred_projects must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to user_starred_projects must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{query} = $params if defined $params;
+    return $self->_call_rest_client( 'GET', 'users/:user_id/starred_projects', [@_], $options );
+}
+
 =back
 
 =head2 Validate the .gitlab-ci.yml
@@ -10965,6 +11013,7 @@ sub wiki_pages {
     my $pages = $api->wiki_page(
         $project_id,
         $slug,
+        \%params,
     );
 
 Sends a C<GET> request to C<projects/:project_id/wikis/:slug> and returns the decoded response content.
@@ -10973,10 +11022,13 @@ Sends a C<GET> request to C<projects/:project_id/wikis/:slug> and returns the de
 
 sub wiki_page {
     my $self = shift;
-    croak 'wiki_page must be called with 2 arguments' if @_ != 2;
+    croak 'wiki_page must be called with 2 to 3 arguments' if @_ < 2 or @_ > 3;
     croak 'The #1 argument ($project_id) to wiki_page must be a scalar' if ref($_[0]) or (!defined $_[0]);
     croak 'The #2 argument ($slug) to wiki_page must be a scalar' if ref($_[1]) or (!defined $_[1]);
+    croak 'The last argument (\%params) to wiki_page must be a hash ref' if defined($_[2]) and ref($_[2]) ne 'HASH';
+    my $params = (@_ == 3) ? pop() : undef;
     my $options = {};
+    $options->{query} = $params if defined $params;
     return $self->_call_rest_client( 'GET', 'projects/:project_id/wikis/:slug', [@_], $options );
 }
 
@@ -11046,6 +11098,184 @@ sub delete_wiki_page {
     $options->{decode} = 0;
     $self->_call_rest_client( 'DELETE', 'projects/:project_id/wikis/:slug', [@_], $options );
     return;
+}
+
+=item upload_wiki_attachments
+
+    my $upload = $api->upload_wiki_attachments(
+        $project_id,
+        \%params,
+    );
+
+Sends a C<POST> request to C<projects/:project_id/wikis/attachments> and returns the decoded response content.
+
+The C<file> parameter must point to a readable file on the local filesystem.
+=cut
+
+sub upload_wiki_attachments {
+    my $self = shift;
+    croak 'upload_wiki_attachments must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($project_id) to upload_wiki_attachments must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to upload_wiki_attachments must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{content} = $params if defined $params;
+    return $self->_call_rest_client( 'POST', 'projects/:project_id/wikis/attachments', [@_], $options );
+}
+
+=item group_wiki_pages
+
+    my $pages = $api->group_wiki_pages(
+        $group_id,
+        \%params,
+    );
+
+Sends a C<GET> request to C<groups/:group_id/wikis> and returns the decoded response content.
+
+=cut
+
+sub group_wiki_pages {
+    my $self = shift;
+    croak 'group_wiki_pages must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($group_id) to group_wiki_pages must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to group_wiki_pages must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{query} = $params if defined $params;
+    return $self->_call_rest_client( 'GET', 'groups/:group_id/wikis', [@_], $options );
+}
+
+=item group_wiki_page
+
+    my $page = $api->group_wiki_page(
+        $group_id,
+        $slug,
+        \%params,
+    );
+
+Sends a C<GET> request to C<groups/:group_id/wikis/:slug> and returns the decoded response content.
+
+=cut
+
+sub group_wiki_page {
+    my $self = shift;
+    croak 'group_wiki_page must be called with 2 to 3 arguments' if @_ < 2 or @_ > 3;
+    croak 'The #1 argument ($group_id) to group_wiki_page must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The #2 argument ($slug) to group_wiki_page must be a scalar' if ref($_[1]) or (!defined $_[1]);
+    croak 'The last argument (\%params) to group_wiki_page must be a hash ref' if defined($_[2]) and ref($_[2]) ne 'HASH';
+    my $params = (@_ == 3) ? pop() : undef;
+    my $options = {};
+    $options->{query} = $params if defined $params;
+    return $self->_call_rest_client( 'GET', 'groups/:group_id/wikis/:slug', [@_], $options );
+}
+
+=item group_create_wiki_page
+
+    my $page = $api->group_create_wiki_page(
+        $group_id,
+        \%params,
+    );
+
+Sends a C<POST> request to C<groups/:group_id/wikis> and returns the decoded response content.
+
+=cut
+
+sub group_create_wiki_page {
+    my $self = shift;
+    croak 'group_create_wiki_page must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($group_id) to group_create_wiki_page must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to group_create_wiki_page must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{content} = $params if defined $params;
+    return $self->_call_rest_client( 'POST', 'groups/:group_id/wikis', [@_], $options );
+}
+
+=item group_edit_wiki_page
+
+    my $page = $api->group_edit_wiki_page(
+        $group_id,
+        $slug,
+        \%params,
+    );
+
+Sends a C<PUT> request to C<groups/:group_id/wikis/:slug> and returns the decoded response content.
+
+=cut
+
+sub group_edit_wiki_page {
+    my $self = shift;
+    croak 'group_edit_wiki_page must be called with 2 to 3 arguments' if @_ < 2 or @_ > 3;
+    croak 'The #1 argument ($group_id) to group_edit_wiki_page must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The #2 argument ($slug) to group_edit_wiki_page must be a scalar' if ref($_[1]) or (!defined $_[1]);
+    croak 'The last argument (\%params) to group_edit_wiki_page must be a hash ref' if defined($_[2]) and ref($_[2]) ne 'HASH';
+    my $params = (@_ == 3) ? pop() : undef;
+    my $options = {};
+    $options->{content} = $params if defined $params;
+    return $self->_call_rest_client( 'PUT', 'groups/:group_id/wikis/:slug', [@_], $options );
+}
+
+=item group_delete_wiki_page
+
+    $api->group_delete_wiki_page(
+        $group_id,
+        $slug,
+    );
+
+Sends a C<DELETE> request to C<groups/:group_id/wikis/:slug>.
+
+=cut
+
+sub group_delete_wiki_page {
+    my $self = shift;
+    croak 'group_delete_wiki_page must be called with 2 arguments' if @_ != 2;
+    croak 'The #1 argument ($group_id) to group_delete_wiki_page must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The #2 argument ($slug) to group_delete_wiki_page must be a scalar' if ref($_[1]) or (!defined $_[1]);
+    my $options = {};
+    $options->{decode} = 0;
+    $self->_call_rest_client( 'DELETE', 'groups/:group_id/wikis/:slug', [@_], $options );
+    return;
+}
+
+=item group_upload_wiki_attachments
+
+    my $page = $api->group_upload_wiki_attachments(
+        $group_id,
+    );
+
+Sends a C<POST> request to C<groups/:group_id/wikis/attachments> and returns the decoded response content.
+
+=cut
+
+sub group_upload_wiki_attachments {
+    my $self = shift;
+    croak 'group_upload_wiki_attachments must be called with 1 arguments' if @_ != 1;
+    croak 'The #1 argument ($group_id) to group_upload_wiki_attachments must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    my $options = {};
+    return $self->_call_rest_client( 'POST', 'groups/:group_id/wikis/attachments', [@_], $options );
+}
+
+=item group_upload_wiki_attachments
+
+    my $upload = $api->group_upload_wiki_attachments(
+        $group_id,
+        \%params,
+    );
+
+Sends a C<POST> request to C<groups/:group_id/wikis/attachments> and returns the decoded response content.
+
+The C<file> parameter must point to a readable file on the local filesystem.
+=cut
+
+sub group_upload_wiki_attachments {
+    my $self = shift;
+    croak 'group_upload_wiki_attachments must be called with 1 to 2 arguments' if @_ < 1 or @_ > 2;
+    croak 'The #1 argument ($group_id) to group_upload_wiki_attachments must be a scalar' if ref($_[0]) or (!defined $_[0]);
+    croak 'The last argument (\%params) to group_upload_wiki_attachments must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
+    my $params = (@_ == 2) ? pop() : undef;
+    my $options = {};
+    $options->{content} = $params if defined $params;
+    return $self->_call_rest_client( 'POST', 'groups/:group_id/wikis/attachments', [@_], $options );
 }
 
 =back
