@@ -12,7 +12,6 @@
 - group_create_wiki_page: page = POST groups/:group_id/wikis?
 - group_edit_wiki_page: page = PUT groups/:group_id/wikis/:slug?
 - group_delete_wiki_page: DELETE groups/:group_id/wikis/:slug
-- group_upload_wiki_attachments: page = POST groups/:group_id/wikis/attachments
 - method: group_upload_wiki_attachments
   spec: upload = POST groups/:group_id/wikis/attachments?
   note: The C<file> parameter must point to a readable file on the local filesystem.

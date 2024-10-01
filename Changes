@@ -12,7 +12,6 @@ Revision history for Perl extension GitLab-API-v4.
  - Add group_edit_wiki_page
  - Add group_delete_wiki_page
  - Add group_upload_wiki_attachments
- - Add group_upload_wiki_attachments
  - Retry on 429 (rate limited) responses.
  - Add a retry_wait with a default of 10 (seconds).
 

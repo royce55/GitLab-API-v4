@@ -11239,24 +11239,6 @@ sub group_delete_wiki_page {
 
 =item group_upload_wiki_attachments
 
-    my $page = $api->group_upload_wiki_attachments(
-        $group_id,
-    );
-
-Sends a C<POST> request to C<groups/:group_id/wikis/attachments> and returns the decoded response content.
-
-=cut
-
-sub group_upload_wiki_attachments {
-    my $self = shift;
-    croak 'group_upload_wiki_attachments must be called with 1 arguments' if @_ != 1;
-    croak 'The #1 argument ($group_id) to group_upload_wiki_attachments must be a scalar' if ref($_[0]) or (!defined $_[0]);
-    my $options = {};
-    return $self->_call_rest_client( 'POST', 'groups/:group_id/wikis/attachments', [@_], $options );
-}
-
-=item group_upload_wiki_attachments
-
     my $upload = $api->group_upload_wiki_attachments(
         $group_id,
         \%params,
