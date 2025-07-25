@@ -7434,12 +7434,12 @@ sub create_project {
 
 =item create_project_for_user
 
-    $api->create_project_for_user(
+    my $project = $api->create_project_for_user(
         $user_id,
         \%params,
     );
 
-Sends a C<POST> request to C<projects/user/:user_id>.
+Sends a C<POST> request to C<projects/user/:user_id> and returns the decoded response content.
 
 =cut
 
@@ -7450,10 +7450,8 @@ sub create_project_for_user {
     croak 'The last argument (\%params) to create_project_for_user must be a hash ref' if defined($_[1]) and ref($_[1]) ne 'HASH';
     my $params = (@_ == 2) ? pop() : undef;
     my $options = {};
-    $options->{decode} = 0;
     $options->{content} = $params if defined $params;
-    $self->_call_rest_client( 'POST', 'projects/user/:user_id', [@_], $options );
-    return;
+    return $self->_call_rest_client( 'POST', 'projects/user/:user_id', [@_], $options );
 }
 
 =item edit_project
